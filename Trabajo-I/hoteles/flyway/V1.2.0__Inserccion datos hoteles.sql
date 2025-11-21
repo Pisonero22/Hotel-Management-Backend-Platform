@@ -1,0 +1,21 @@
+INSERT INTO HOTELES(ID, NOMBRE, LOCALIZACION, ESTRELLAS,PRECIO_NOCHE)
+VALUES('00001', 'Gran Hotel Corona Sol', 'Av. de los Agustinos Recoletos, 44, Salamanca',3,30.50);
+
+INSERT INTO HOTELES(ID, NOMBRE, LOCALIZACION, ESTRELLAS,PRECIO_NOCHE)
+VALUES('00002', 'Hotel Alameda Palace', 'P.º de la Estación, 1, 37004 Salamanca',5,70.22);
+
+INSERT INTO HOTELES(ID, NOMBRE, LOCALIZACION, ESTRELLAS,PRECIO_NOCHE)
+VALUES('00003', 'Hotel Eurostars Las Claras', 'C. de la Marquesa de Almarza, Salamanca',4,50.76);
+
+INSERT INTO HOTELES(ID, NOMBRE, LOCALIZACION, ESTRELLAS,PRECIO_NOCHE)
+VALUES('00004', 'Hotel Catalonia Plaza Mayor', 'C. Espoz y Mina, 23, Salamanca',4,39.89);
+
+INSERT INTO HOTELES(ID, NOMBRE, LOCALIZACION, ESTRELLAS,PRECIO_NOCHE)
+VALUES('00005', 'Hotel Hall 88 Studios', 'C. Peña de Francia, 48, Salamanca',4,27.39);
+
+INSERT INTO HOTELES(ID, NOMBRE, LOCALIZACION, ESTRELLAS,PRECIO_NOCHE)
+VALUES('00006', 'Hotel Eurowest', 'C. Pico del Naranco, 2, Salamanca',3,18.43);
+
+INSERT INTO HOTELES(ID, NOMBRE, LOCALIZACION, ESTRELLAS,PRECIO_NOCHE)
+VALUES('00007', 'Hotel Best Delta', 'Urbanización Puig de Ros, s/n, Carrer Tudó, Balearic Islands',4,67.54);
+

@@ -1,0 +1,106 @@
+version: '3.9'
+services:
+  database:
+    image: postgres:16.4
+    environment:
+      POSTGRES_DB: upsa
+      POSTGRES_USER: system
+      POSTGRES_PASSWORD: manager
+  rproxy:
+    image: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 80:80
+    depends_on:
+      - hoteles
+      - personas
+      - reservas
+      - gateway
+
+  cache-redis:
+    image: bitnami/redis
+    environment:
+      REDIS_PORT_NUMBER: 6379
+      ALLOW_EMPTY_PASSWORD: yes
+    ports:
+      - 6379:6379
+  flyway:
+    image: flyway/flyway
+    volumes:
+      - ./hoteles/flyway:/flyway/db/hoteles
+      - ./personas/flyway:/flyway/db/personas
+      - ./reservas/flyway:/flyway/db/reservas
+    environment:
+      FLYWAY_URL: jdbc:postgresql://database:5432/upsa
+      FLYWAY_USER: system
+      FLYWAY_PASSWORD: manager
+      FLYWAY_LOCATIONS: filesystem:/flyway/db/hoteles,filesystem:/flyway/db/personas,filesystem:/flyway/db/reservas
+    command: [ "migrate" ]
+    depends_on:
+      - database
+  hoteles:
+    build:
+      context: hoteles
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_HOST: database
+      DATABASE_PORT: 5432
+      DATABASE_NAME: upsa
+      DATABASE_USER: system
+      DATABASE_PASSWORD: manager
+      REDIS_HOSTS: redis://cache-redis:6379
+      REDIS_TYPE: standalone
+    depends_on:
+      - database
+      - flyway
+      - cache-redis
+  personas:
+    build:
+      context: personas
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_HOST: database
+      DATABASE_PORT: 5432
+      DATABASE_NAME: upsa
+      DATABASE_USER: system
+      DATABASE_PASSWORD: manager
+      REDIS_HOSTS: redis://cache-redis:6379
+      REDIS_TYPE: standalone
+    depends_on:
+      - database
+      - flyway
+      - cache-redis
+  reservas:
+    build:
+      context: reservas
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_HOST: database
+      DATABASE_PORT: 5432
+      DATABASE_NAME: upsa
+      DATABASE_USER: system
+      DATABASE_PASSWORD: manager
+      REDIS_HOSTS: redis://cache-redis:6379
+      REDIS_TYPE: standalone
+    depends_on:
+      - database
+      - flyway
+      - cache-redis
+
+
+  gateway:
+    build:
+      context: gateway
+      dockerfile: Dockerfile
+    environment:
+      SERVICE_HOTELES_URL: http://hoteles:8080
+      SERVICE_PERSONAS_URL: http://personas:8080
+      SERVICE_RESERVAS_URL: http://reservas:8080
+    depends_on:
+      - hoteles
+      - personas
+      - reservas
+
+
+
