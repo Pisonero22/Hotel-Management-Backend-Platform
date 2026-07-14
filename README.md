@@ -1,100 +1,118 @@
 # Hotel Management Backend Platform
 
-Plataforma backend para la gestión de hoteles, clientes y reservas, implementada como arquitectura de microservicios con **Java 21** y **Quarkus**.
-
-El sistema expone una API REST unificada a través de un API Gateway, con persistencia en PostgreSQL, caché distribuida con Redis y despliegue containerizado mediante Docker Compose.
+A microservices-based backend for managing hotels, guests, and reservations. Built with **Java 21** and **Quarkus**, it exposes a unified REST API through an API Gateway, persists data in **PostgreSQL**, caches reads with **Redis**, and ships with **Docker Compose** for local deployment.
 
 ---
 
-## Características
+## Features
 
-- **Gestión de hoteles**: CRUD completo con validación de estrellas (1–5) y precio por noche.
-- **Gestión de personas**: registro, consulta, actualización y eliminación de clientes por DNI.
-- **Gestión de reservas**: creación y administración de reservas vinculadas a hoteles y personas, con titular y acompañantes.
-- **API Gateway**: punto de entrada único que orquesta las llamadas entre microservicios.
-- **Caché con Redis**: capa de caché sobre los repositorios para optimizar lecturas frecuentes.
-- **Migraciones con Flyway**: esquema de base de datos versionado y reproducible.
-- **Documentación OpenAPI**: especificación y Swagger UI disponibles en el gateway.
-- **Reverse proxy con Nginx**: enrutamiento centralizado hacia el gateway en el puerto 80.
+- **Hotel management** — Full CRUD with star rating validation (1–5) and nightly pricing.
+- **Guest management** — Register, query, update, and delete guests by national ID (DNI).
+- **Reservation management** — Create and manage bookings linked to hotels and guests, with a holder and accompanying guests.
+- **API Gateway** — Single entry point that orchestrates calls across microservices.
+- **Redis caching** — Repository-level cache layer to optimize frequent reads.
+- **Flyway migrations** — Versioned, reproducible database schema.
+- **OpenAPI documentation** — Spec and Swagger UI served from the gateway.
+- **Nginx reverse proxy** — Centralized routing to the gateway on port 80.
 
 ---
 
-## Arquitectura
+## Architecture
 
 ```mermaid
 flowchart LR
-    Client([Cliente]) --> Nginx
+    Client([Client]) --> Nginx
     Nginx --> Gateway
-    Gateway --> Hoteles
-    Gateway --> Personas
-    Gateway --> Reservas
-    Hoteles --> PostgreSQL[(PostgreSQL)]
-    Personas --> PostgreSQL
-    Reservas --> PostgreSQL
-    Hoteles --> Redis[(Redis)]
-    Personas --> Redis
-    Reservas --> Redis
+    Gateway --> Hotels
+    Gateway --> Guests
+    Gateway --> Reservations
+    Hotels --> PostgreSQL[(PostgreSQL)]
+    Guests --> PostgreSQL
+    Reservations --> PostgreSQL
+    Hotels --> Redis[(Redis)]
+    Guests --> Redis
+    Reservations --> Redis
     Flyway --> PostgreSQL
 ```
 
-| Módulo      | Responsabilidad                                              |
-|-------------|--------------------------------------------------------------|
-| `domain`    | Entidades de dominio y excepciones compartidas               |
-| `hoteles`   | Microservicio de gestión de hoteles                          |
-| `personas`  | Microservicio de gestión de clientes                         |
-| `reservas`  | Microservicio de gestión de reservas                         |
-| `gateway`   | API Gateway: expone la API pública y coordina los servicios  |
-| `nginx`     | Reverse proxy que redirige el tráfico al gateway             |
+| Module          | Responsibility                                              |
+|-----------------|-------------------------------------------------------------|
+| `domain`        | Shared domain entities and exceptions                       |
+| `hoteles`       | Hotels microservice                                         |
+| `personas`      | Guests microservice                                         |
+| `reservas`      | Reservations microservice                                   |
+| `gateway`       | API Gateway — public API and cross-service orchestration    |
+| `nginx`         | Reverse proxy forwarding traffic to the gateway             |
 
-Cada microservicio sigue una **arquitectura hexagonal** con capas de casos de uso, adaptadores (REST, persistencia) y repositorios.
-
----
-
-## Stack tecnológico
-
-| Tecnología        | Versión / Uso                          |
-|-------------------|----------------------------------------|
-| Java              | 21                                     |
-| Quarkus           | 3.17.5                                 |
-| PostgreSQL        | 16.4                                   |
-| Redis             | Bitnami Redis                          |
-| Flyway            | Migraciones de base de datos           |
-| Nginx             | Reverse proxy                          |
-| Docker Compose    | Orquestación de contenedores           |
-| Maven             | Gestión de dependencias y build        |
-| Lombok            | Reducción de boilerplate               |
-| SmallRye OpenAPI  | Documentación de la API                |
+Each microservice follows a **hexagonal architecture** with use cases, adapters (REST, persistence), and repositories.
 
 ---
 
-## Requisitos previos
+## Tech Stack
 
-- [Docker](https://www.docker.com/) y Docker Compose
-- [Java 21](https://adoptium.net/) (solo para desarrollo local)
-- [Maven 3.9+](https://maven.apache.org/) o usar el wrapper incluido (`./mvnw`)
+| Technology       | Version / Role                    |
+|------------------|-----------------------------------|
+| Java             | 21                                |
+| Quarkus          | 3.17.5                            |
+| PostgreSQL       | 16.4                              |
+| Redis            | Bitnami Redis                     |
+| Flyway           | Database migrations               |
+| Nginx            | Reverse proxy                     |
+| Docker Compose   | Container orchestration           |
+| Maven            | Dependency management and builds  |
+| Lombok           | Boilerplate reduction             |
+| SmallRye OpenAPI | API documentation                 |
 
 ---
 
-## Inicio rápido con Docker
+## Prerequisites
 
-Clona el repositorio y levanta toda la plataforma:
+- [Docker](https://www.docker.com/) and Docker Compose
+- [Java 21](https://adoptium.net/) (for local development)
+- [Maven 3.9+](https://maven.apache.org/) or the included Maven Wrapper (`./mvnw`)
+
+---
+
+## Quick Start (Full Stack)
+
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<tu-usuario>/Hotel-Management-Backend-Platform.git
+git clone https://github.com/<your-username>/Hotel-Management-Backend-Platform.git
 cd Hotel-Management-Backend-Platform/Trabajo-I
+```
+
+### 2. Build all services
+
+Docker images expect pre-built Quarkus artifacts. Install the shared `domain` module first, then package each service:
+
+```bash
+# Install shared domain module
+cd domain && mvn clean install && cd ..
+
+# Package microservices
+cd hoteles   && ./mvnw clean package && cd ..
+cd personas  && ./mvnw clean package && cd ..
+cd reservas  && ./mvnw clean package && cd ..
+cd gateway   && ./mvnw clean package && cd ..
+```
+
+### 3. Start the platform
+
+```bash
 docker compose -f docker-compose-trabajo-entero.yml up --build
 ```
 
-Una vez levantados los servicios:
+### 4. Access the services
 
-| Recurso              | URL                              |
-|----------------------|----------------------------------|
-| API (vía Nginx)      | `http://localhost`               |
-| Swagger UI           | `http://localhost/swagger`       |
-| OpenAPI spec         | `http://localhost/openapi`       |
-| Redis                | `localhost:6379`                 |
+| Resource       | URL                              |
+|----------------|----------------------------------|
+| API (via Nginx)| `http://localhost`               |
+| Swagger UI     | `http://localhost/swagger`       |
+| OpenAPI spec   | `http://localhost/openapi`       |
+| Redis          | `localhost:6379`                 |
 
-Para detener los contenedores:
+To stop the containers:
 
 ```bash
 docker compose -f docker-compose-trabajo-entero.yml down
@@ -102,105 +120,110 @@ docker compose -f docker-compose-trabajo-entero.yml down
 
 ---
 
-## Desarrollo local
+## Local Development
 
-### Levantar solo la infraestructura
+### Start infrastructure only
 
-Si prefieres ejecutar los microservicios en modo desarrollo con Quarkus:
+To run microservices locally with Quarkus dev mode, start the backing services first:
 
 ```bash
 cd Trabajo-I
 docker compose -f docker-compose-trabajo1.yml up -d
 ```
 
-Esto inicia PostgreSQL, Redis y Flyway. Los microservicios quedan expuestos en:
+This starts PostgreSQL, Redis, and Flyway. Microservices are mapped to the following host ports:
 
-| Servicio  | Puerto |
-|-----------|--------|
-| Hoteles   | 8081   |
-| Personas  | 8082   |
-| Reservas  | 8083   |
+| Service       | Host port | Internal port |
+|---------------|-----------|-----------------|
+| Hotels        | 81        | 8081            |
+| Guests        | 82        | 8082            |
+| Reservations  | 83        | 8083            |
 
-### Ejecutar un microservicio en modo dev
+### Run a microservice in dev mode
+
+Each service uses a dedicated port defined in `application.properties`:
+
+| Service       | Port |
+|---------------|------|
+| Hotels        | 8081 |
+| Guests        | 8082 |
+| Reservations  | 8083 |
+| Gateway       | 8084 |
 
 ```bash
-cd Trabajo-I/personas   # o hoteles, reservas, gateway
+cd Trabajo-I/personas   # or hoteles, reservas, gateway
 ./mvnw quarkus:dev
 ```
 
-La Dev UI de Quarkus estará disponible en `http://localhost:8080/q/dev/`.
+Quarkus Dev UI is available at `http://localhost:<port>/q/dev/`.
 
-### Compilar todo el proyecto
-
-```bash
-cd Trabajo-I
-./mvnw clean package
-```
+When running the gateway locally, it expects the other services at `http://localhost:8081`, `8082`, and `8083` (configured in `gateway/src/main/resources/application.properties`).
 
 ---
 
-## API REST
+## REST API
 
-Todos los endpoints públicos se acceden a través del gateway (puerto 80 con Nginx).
+All public endpoints are accessed through the gateway. With the full Docker stack, use the Nginx entry point on port 80.
 
-### Hoteles — `/hoteles`
+### Hotels — `/hoteles`
 
-| Método   | Ruta            | Descripción                    |
-|----------|-----------------|--------------------------------|
-| `GET`    | `/hoteles`      | Listar todos los hoteles       |
-| `GET`    | `/hoteles/{id}` | Obtener hotel por ID           |
-| `POST`   | `/hoteles`      | Crear un hotel                 |
-| `PUT`    | `/hoteles/{id}` | Actualizar un hotel            |
-| `DELETE` | `/hoteles/{id}` | Eliminar un hotel              |
+| Method   | Path            | Description          |
+|----------|-----------------|----------------------|
+| `GET`    | `/hoteles`      | List all hotels      |
+| `GET`    | `/hoteles/{id}` | Get hotel by ID      |
+| `POST`   | `/hoteles`      | Create a hotel       |
+| `PUT`    | `/hoteles/{id}` | Update a hotel       |
+| `DELETE` | `/hoteles/{id}` | Delete a hotel       |
 
-**Ejemplo de creación:**
+**Create example:**
 
 ```json
 {
   "nombre": "Hotel Salamanca",
-  "localizacion": "Salamanca, España",
+  "localizacion": "Salamanca, Spain",
   "estrellas": 4,
   "precioNoche": 89.50
 }
 ```
 
-### Personas — `/personas`
+### Guests — `/personas`
 
-| Método   | Ruta                  | Descripción                    |
-|----------|-----------------------|--------------------------------|
-| `GET`    | `/personas`           | Listar todas las personas      |
-| `GET`    | `/personas/{dni}`     | Obtener persona por DNI        |
-| `POST`   | `/personas`           | Registrar una persona          |
-| `PUT`    | `/personas/{dni}`     | Actualizar una persona         |
-| `DELETE` | `/personas/{dni}`     | Eliminar una persona           |
+| Method   | Path                    | Description           |
+|----------|-------------------------|-----------------------|
+| `GET`    | `/personas`             | List all guests       |
+| `GET`    | `/personas/{dni}`       | Get guest by DNI      |
+| `POST`   | `/personas`             | Register a guest      |
+| `PUT`    | `/personas/{dni}`       | Update a guest        |
+| `DELETE` | `/personas/{dni}`       | Delete a guest        |
 
-**Ejemplo de creación:**
+**Create example:**
 
 ```json
 {
-  "nombre": "Ana García",
+  "dni": "12345678A",
+  "nombre": "Ana Garcia",
   "fechaNacimiento": "1990-05-15",
   "telefono": "600123456"
 }
 ```
 
-### Reservas — `/reservas`
+### Reservations — `/reservas`
 
-| Método   | Ruta                        | Descripción                              |
-|----------|-----------------------------|------------------------------------------|
-| `GET`    | `/reservas/{idReserva}`     | Obtener reserva por ID                   |
-| `GET`    | `/reservas/hotel/{id}`      | Listar reservas de un hotel              |
-| `POST`   | `/reservas`                 | Crear una reserva                        |
-| `PUT`    | `/reservas/{id}`            | Actualizar una reserva                   |
-| `DELETE` | `/reservas/{id}`            | Eliminar una reserva                     |
+| Method   | Path                   | Description                    |
+|----------|------------------------|--------------------------------|
+| `GET`    | `/reservas/{id}`       | Get reservation by ID          |
+| `GET`    | `/reservas/hotel/{id}` | List reservations for a hotel  |
+| `POST`   | `/reservas`            | Create a reservation           |
+| `PUT`    | `/reservas/{id}`       | Update a reservation           |
+| `DELETE` | `/reservas/{id}`       | Delete a reservation           |
 
-**Ejemplo de creación:**
+**Create example** (using seed data IDs):
 
 ```json
 {
-  "dni": "12345678A",
-  "id_hotel": "H0001",
-  "DNITitular": "12345678A",
+  "dni": "70918645P",
+  "id_hotel": "00001",
+  "DNITitular": "70918645P",
   "fechaEntrada": "2026-08-01",
   "fechaSalida": "2026-08-05",
   "precioTotal": 358.00
@@ -209,7 +232,7 @@ Todos los endpoints públicos se acceden a través del gateway (puerto 80 con Ng
 
 ---
 
-## Modelo de datos
+## Data Model
 
 ```
 HOTELES (ID, NOMBRE, LOCALIZACION, ESTRELLAS, PRECIO_NOCHE)
@@ -221,45 +244,47 @@ RESERVAS (ID, DNI, ID_HOTEL, TITULAR_DNI, FECHA_ENTRADA, FECHA_SALIDA, PRECIO)
 PERSONAS (DNI, NOMBRE, FECHA_NACIMIENTO, TELEFONO)
 ```
 
-Las migraciones Flyway se encuentran en `Trabajo-I/<servicio>/flyway/` y se ejecutan automáticamente al levantar Docker Compose.
+Flyway migration scripts live under `Trabajo-I/<service>/flyway/` and run automatically when using Docker Compose.
 
 ---
 
-## Variables de entorno
+## Environment Variables
 
-| Variable               | Descripción                          | Valor por defecto (Docker)     |
-|------------------------|--------------------------------------|--------------------------------|
-| `DATABASE_HOST`        | Host de PostgreSQL                   | `database`                     |
-| `DATABASE_PORT`        | Puerto de PostgreSQL                 | `5432`                         |
-| `DATABASE_NAME`        | Nombre de la base de datos           | `upsa`                         |
-| `DATABASE_USER`        | Usuario de la base de datos          | `system`                       |
-| `DATABASE_PASSWORD`    | Contraseña de la base de datos       | `manager`                      |
-| `REDIS_HOSTS`          | URL de conexión a Redis              | `redis://cache-redis:6379`     |
-| `REDIS_TYPE`           | Tipo de despliegue Redis             | `standalone`                   |
-| `SERVICE_HOTELES_URL`  | URL interna del servicio hoteles     | `http://hoteles:8080`          |
-| `SERVICE_PERSONAS_URL` | URL interna del servicio personas    | `http://personas:8080`         |
-| `SERVICE_RESERVAS_URL` | URL interna del servicio reservas    | `http://reservas:8080`         |
+Quarkus maps environment variables to configuration properties automatically (e.g. `DATABASE_HOST` → `database.host`).
+
+| Variable               | Description                       | Default (Docker)               |
+|------------------------|-----------------------------------|--------------------------------|
+| `DATABASE_HOST`        | PostgreSQL host                   | `database`                     |
+| `DATABASE_PORT`        | PostgreSQL port                   | `5432`                         |
+| `DATABASE_NAME`        | Database name                     | `upsa`                         |
+| `DATABASE_USER`        | Database user                     | `system`                       |
+| `DATABASE_PASSWORD`    | Database password                 | `manager`                      |
+| `REDIS_HOSTS`          | Redis connection URL              | `redis://cache-redis:6379`     |
+| `REDIS_TYPE`           | Redis deployment type             | `standalone`                   |
+| `SERVICE_HOTELES_URL`  | Internal hotels service URL       | `http://hoteles:8080`          |
+| `SERVICE_PERSONAS_URL` | Internal guests service URL       | `http://personas:8080`         |
+| `SERVICE_RESERVAS_URL` | Internal reservations service URL | `http://reservas:8080`         |
 
 ---
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 Hotel-Management-Backend-Platform/
 └── Trabajo-I/
-    ├── domain/                  # Entidades y excepciones compartidas
-    ├── hoteles/                 # Microservicio de hoteles
-    ├── personas/                # Microservicio de personas
-    ├── reservas/                # Microservicio de reservas
-    ├── gateway/                 # API Gateway
-    ├── nginx/                   # Configuración del reverse proxy
-    ├── docker-compose-trabajo-entero.yml   # Stack completo
-    ├── docker-compose-trabajo1.yml         # Solo infraestructura
-    └── pom.xml                  # POM padre Maven
+    ├── domain/                             # Shared entities and exceptions
+    ├── hoteles/                            # Hotels microservice
+    ├── personas/                           # Guests microservice
+    ├── reservas/                           # Reservations microservice
+    ├── gateway/                            # API Gateway
+    ├── nginx/                              # Reverse proxy configuration
+    ├── docker-compose-trabajo-entero.yml   # Full stack (all services + Nginx)
+    ├── docker-compose-trabajo1.yml         # Infrastructure only (DB, Redis, Flyway)
+    └── pom.xml                             # Parent Maven POM
 ```
 
 ---
 
-## Licencia
+## License
 
-Este proyecto fue desarrollado como trabajo académico en el marco de la asignatura de Sistemas de Información (UPSA).
+This project was developed as an academic assignment for the Information Systems course at UPSA (Universidad Pontificia de Salamanca).
