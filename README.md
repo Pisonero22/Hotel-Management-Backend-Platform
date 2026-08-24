@@ -221,9 +221,9 @@ All public endpoints are accessed through the gateway. With the full Docker stac
 
 ```json
 {
-  "dni": "70918645P",
+  "dni": "70918745P",
   "id_hotel": "00001",
-  "DNITitular": "70918645P",
+  "DNITitular": "70918745P",
   "fechaEntrada": "2026-08-01",
   "fechaSalida": "2026-08-05",
   "precioTotal": 358.00
